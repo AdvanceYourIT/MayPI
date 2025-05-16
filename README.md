@@ -93,3 +93,13 @@ $result = Move-DeviceToTargetLocation `
 if ($result) {
     Write-Output "SUCCESS: Device successfully moved."
 }
+```
+
+---
+
+## 🧑‍💻 Author
+
+Robert van Oorschot – [Advance Your IT]
+🇳🇱 NinjaOne enthusiast
+
+---
