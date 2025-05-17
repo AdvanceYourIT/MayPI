@@ -1,17 +1,17 @@
 <#
 .SYNOPSIS
-    Moves the current device from an onboarding location to a target location within the same organization in NinjaOne.
+    Moves the current device from a home location to a target location within the same organization in NinjaOne.
 
 .DESCRIPTION
     This script is designed to be run as an automation in NinjaOne. It authenticates with the NinjaOne API using credentials stored in Custom Fields (NinjaOneAPIClientID and NinjaOneAPISecret),
     identifies the current device it's running on, finds the organization the device belongs to,
-    locates both the specified onboarding and target locations within that organization,
-    and moves the device from the onboarding location to the target location.
+    locates both the specified home and target locations within that organization,
+    and moves the device from the home location to the target location.
 
 .EXAMPLE
     Run in NinjaOne as an automation script with parameters:
-    - OnboardingLocationPattern: "*test*"
-    - TargetLocationPattern: "*main*"
+    - HomeLocation: "*test*"
+    - TargetLocation: "*main*"
     Ensure NinjaOneAPIClientID and NinjaOneAPISecret are set in Global Custom Fields.
 
 .INSTANCES
@@ -21,26 +21,26 @@
     "ca.ninjarmm.com",
     "oc.ninjarmm.com"
 
-.PARAMETER OnboardingLocationPattern
-    The pattern to match the onboarding location (e.g., "*test*"). Defaults to "*onboarding*".
+.PARAMETER HomeLocation
+    The pattern to match the home location (e.g., "*test*"). Defaults to "*onboarding*".
 
-.PARAMETER TargetLocationPattern
+.PARAMETER TargetLocation
     The pattern to match the target location (e.g., "*main*"). Defaults to "*main*office*".
 
 .NOTES
     Author: Robert van Oorschot - Advance Your IT
-    Date: 2025-05-16
-    Version: 1.8
+    Date: 2025-05-17
+    Version: 1.9.2
     Custom Fields Required: NinjaOneAPIClientID, NinjaOneAPISecret
     Note: NinjaOneAPISecret must be less than 200 characters.
 #>
 
 param (
     [Parameter(Mandatory=$false)]
-    [string]$OnboardingLocationPattern = "*onboarding*",
+    [string]$HomeLocation = "*onboarding*",
 
     [Parameter(Mandatory=$false)]
-    [string]$TargetLocationPattern = "*main*office*"
+    [string]$TargetLocation = "*main*office*"
 )
 
 # Hardcode instance URL
@@ -232,10 +232,10 @@ function Get-OrganizationLocations {
         [int]$OrganizationId,
         
         [Parameter(Mandatory=$true)]
-        [string]$OnboardingLocationPattern,
+        [string]$HomeLocation,
         
         [Parameter(Mandatory=$true)]
-        [string]$TargetLocationPattern
+        [string]$TargetLocation
     )
     
     try {
@@ -250,23 +250,23 @@ function Get-OrganizationLocations {
             throw "No locations found for organization ID: $OrganizationId"
         }
         
-        # Find onboarding location
-        $onboardingLocation = $locations | Where-Object { $_.name -like $OnboardingLocationPattern } | Select-Object -First 1
+        # Find home location
+        $homeLocationObj = $locations | Where-Object { $_.name -like $HomeLocation } | Select-Object -First 1
         
-        if (-not $onboardingLocation) {
-            throw "Could not find onboarding location matching pattern: $OnboardingLocationPattern"
+        if (-not $homeLocationObj) {
+            throw "Could not find home location matching pattern: $HomeLocation"
         }
         
         # Find target location
-        $targetLocation = $locations | Where-Object { $_.name -like $TargetLocationPattern } | Select-Object -First 1
+        $targetLocationObj = $locations | Where-Object { $_.name -like $TargetLocation } | Select-Object -First 1
         
-        if (-not $targetLocation) {
-            throw "Could not find target location matching pattern: $TargetLocationPattern"
+        if (-not $targetLocationObj) {
+            throw "Could not find target location matching pattern: $TargetLocation"
         }
         
         return @{
-            onboardingLocation = $onboardingLocation
-            targetLocation = $targetLocation
+            homeLocation = $homeLocationObj
+            targetLocation = $targetLocationObj
         }
     } catch {
         throw $_
@@ -353,13 +353,13 @@ try {
     $currentDevice = Get-CurrentDevice -AccessToken $accessToken
     
     # Get organization locations
-    $locations = Get-OrganizationLocations -AccessToken $accessToken -OrganizationId $currentDevice.organizationId -OnboardingLocationPattern $OnboardingLocationPattern -TargetLocationPattern $TargetLocationPattern
+    $locations = Get-OrganizationLocations -AccessToken $accessToken -OrganizationId $currentDevice.organizationId -HomeLocation $HomeLocation -TargetLocation $TargetLocation
     
     # Move device
     $result = Move-DeviceToTargetLocation -AccessToken $accessToken -DeviceId $currentDevice.id -CurrentLocationId $currentDevice.locationId -TargetLocationId $locations.targetLocation.id
     
     if ($result) {
-        Write-Output "SUCCESS: Device successfully moved from $($locations.onboardingLocation.name) to $($locations.targetLocation.name)."
+        Write-Output "SUCCESS: Device successfully moved from $($locations.homeLocation.name) to $($locations.targetLocation.name)."
         exit 0
     } else {
         Write-Error "FAILURE: Device move operation did not complete successfully."
