@@ -24,10 +24,9 @@
 .NOTES
     Author: Robert van Oorschot - Advance Your IT
     Date: 2025-05-19
-    Version: 1.9.5
+    Version: 1.9.6
     Custom Fields Required: NinjaOneAPIClientID, NinjaOneAPISecret
     Script Variables (Optional): homelocation, targetlocation
-    Note: NinjaOneAPISecret must be less than 200 characters.
 #>
 
 # Hardcode instance URL
@@ -329,16 +328,8 @@ try {
         $Ptr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($clientSecretSecure)
         $clientSecret = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($Ptr)
         [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($Ptr)
-        
-        # Validate length (max 200 characters for secure fields)
-        if ($clientSecret.Length -gt 200) {
-            throw "Custom Field NinjaOneAPISecret exceeds 200-character limit (length: $($clientSecret.Length))."
-        }
     } else {
         $clientSecret = $clientSecretSecure.ToString()
-        if ($clientSecret.Length -gt 200) {
-            throw "Custom Field NinjaOneAPISecret exceeds 200-character limit (length: $($clientSecret.Length))."
-        }
     }
     
     # Get access token
