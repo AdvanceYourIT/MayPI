@@ -1,48 +1,43 @@
 # 🏢 NinjaOne Device Location Automator
 
-Automated PowerShell script to detect and move a device from an onboarding location to its main operational location using the NinjaOne Public API. Ideal for MSPs and IT teams who want clean, scalable onboarding workflows.
+PowerShell script for automating the relocation of devices in NinjaOne from an onboarding location to a main office using the public API.
 
 ---
 
 ## 🔧 What the project does
 
-This script securely connects to the NinjaOne Public API, identifies the current device it’s running on, checks its location, and moves it to the target location ("Main Office") within the same organization. It uses wildcard pattern matching to detect onboarding and destination locations.
+The `MoveDeviceToMainOffice.ps1` script is a PowerShell automation for NinjaOne that moves devices from a home location (e.g., an onboarding site) to a target location (e.g., a main office) within the same organization. It authenticates with the NinjaOne API using client credentials stored in Custom Fields, identifies the current device, retrieves the organization’s locations, and updates the device's location. 
+
+The script uses environment variables (`$env:homelocation` and `$env:targetlocation`) to dynamically set location patterns, with fallback defaults (`*onboarding*` and `*main*office*`), making it flexible and easy to configure within NinjaOne.
 
 ---
 
 ## ❗ The problem it solves
 
-Many environments onboard new devices into temporary locations. If not moved manually, this leads to:
-- Automation misfires
-- Incorrect asset tagging
-- Manual clean-up work
+In NinjaOne, devices are often placed in a temporary onboarding location during setup, requiring manual relocation to their final destination (e.g., "Main Office"). This manual process is time-consuming and error-prone, especially for organizations managing large numbers of devices.
 
-This script ensures every endpoint ends up in the correct place — automatically.
+The script automates this relocation, eliminating manual effort, reducing errors, and ensuring consistency. By leveraging environment variables, it allows IT teams to customize location patterns dynamically without altering the script, enhancing adaptability for different organizational setups.
 
-![Screenshot](https://github.com/user-attachments/assets/7ab9ef02-c8e3-4857-bd44-faa9d228a92a)
-
+![Screenshot](https://github.com/user-attachments/assets/6e0f5bc2-378c-4552-b847-8ceab8a49264)
 
 ---
 
 ## 👥 Who it helps
 
-| Role/Team                   | Benefit                                                 |
-|----------------------------|----------------------------------------------------------|
-| IT Administrators          | Automatically move devices post-onboarding              |
-| MSP Onboarding Teams       | Reduce manual cleanup after provisioning                |
-| Asset Management/Compliance| Maintain proper device-to-location assignment            |
-| Security Teams             | Ensure devices end up in the correct automation scopes   |
+This project benefits IT administrators and system engineers managing device onboarding in NinjaOne, particularly within IT operations teams at small to medium-sized businesses or managed service providers (MSPs). 
+
+It streamlines device management workflows, allowing these teams to focus on higher-priority tasks instead of repetitive manual processes.
 
 ---
 
 ## 🔑 Key API endpoints used
 
-| Endpoint                                | Purpose                                            |
-|-----------------------------------------|----------------------------------------------------|
-| `POST /v2/token`                        | Authenticate via OAuth2 with Client ID/Secret     |
-| `GET /v2/devices`                       | Detect current device via hostname or IP          |
-| `GET /v2/organization/{id}/locations`   | Retrieve all locations for the device's org       |
-| `PATCH /v2/device/{id}`                 | Update device to new location                     |
+The script interacts with the NinjaOne API (version 2) to perform its operations. The key endpoints used are:
+
+- `POST /ws/oauth/token`: Authenticates and obtains an OAuth access token using client credentials.
+- `GET /api/v2/devices`: Retrieves a list of devices to identify the current device, supporting pagination with query parameters `pageSize` and `after`.
+- `GET /api/v2/organization/{organizationId}/locations`: Fetches all locations for a given organization to find the home and target locations.
+- `PATCH /api/v2/device/{deviceId}`: Updates the device’s location by setting a new `locationId` in the request body.
 
 ---
 
@@ -58,12 +53,10 @@ if ($clientSecretSecure -is [System.Security.SecureString]) {
     $Ptr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($clientSecretSecure)
     $clientSecret = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($Ptr)
     [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($Ptr)
-
-    if ($clientSecret.Length -gt 200) {
-        throw "Custom Field NinjaOneAPISecret exceeds 200-character limit."
-    }
 }
 ```
+
+> 🔄 Note: As of recent updates, Secure Custom Fields in NinjaOne support up to 65,535 characters, removing the previous 200-character limitation.
 
 ---
 
@@ -73,21 +66,22 @@ This script is intended to be executed inside a NinjaOne Automation Policy.
 
 ```powershell
 param (
-    [string]$OnboardingLocationPattern = "*onboard*",
-    [string]$TargetLocationPattern = "*main*office*"
+    [string]$OnboardingLocationPattern = $env:homelocation  # e.g., "*staging*"
+    [string]$TargetLocationPattern = $env:targetlocation    # e.g., "*main*office*"
 )
 ```
 
 ✔ Securely authenticates using global fields  
-✔ Automatically checks device location and org  
-✔ Only moves device if location mismatch is detected  
+✔ Automatically checks device location and organization  
+✔ Only moves device if current and target location differ  
+✔ Supports dynamic environment variable-based configuration  
 
 ---
 
 ## 👨‍💻 Author
 
 Robert van Oorschot  
-Advance Your IT
+Advance Your IT 
 🇳🇱 NinjaOne Automation Enthousiast
 
 ---
