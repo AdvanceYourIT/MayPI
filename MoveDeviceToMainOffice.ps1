@@ -10,8 +10,8 @@
 
 .EXAMPLE
     Run in NinjaOne as an automation script with Script Variables:
-    - HomeLocationPattern: "*test*"
-    - TargetLocationPattern: "*main*"
+    - homelocation: "*test*"
+    - targetlocation: "*main*"
     Ensure NinjaOneAPIClientID and NinjaOneAPISecret are set in Global Custom Fields.
 
 .INSTANCES
@@ -24,9 +24,9 @@
 .NOTES
     Author: Robert van Oorschot - Advance Your IT
     Date: 2025-05-19
-    Version: 1.9.4
+    Version: 1.9.5
     Custom Fields Required: NinjaOneAPIClientID, NinjaOneAPISecret
-    Script Variables (Optional): HomeLocationPattern, TargetLocationPattern
+    Script Variables (Optional): homelocation, targetlocation
     Note: NinjaOneAPISecret must be less than 200 characters.
 #>
 
@@ -343,7 +343,7 @@ try {
     
     # Get access token
     $accessToken = Get-AccessToken -ClientId $clientId -ClientSecret $clientSecret
-    if (-not $accessToken -or -not $accessToken.access_token) {
+    if (-not $accessToken -or -not $AccessToken.access_token) {
         throw "Failed to retrieve access token."
     }
     
@@ -357,8 +357,7 @@ try {
     $result = Move-DeviceToTargetLocation -AccessToken $accessToken -DeviceId $currentDevice.id -CurrentLocationId $currentDevice.locationId -TargetLocationId $locations.targetLocation.id
     
     if ($result) {
-        Write-Output "SUCCESS: Device successfully moved from $($locations.homeLocation.name) to $($locations.targetLocation.name)."
-        exit 0
+        exit 0  # Successful execution, exit with code 0
     } else {
         Write-Error "FAILURE: Device move operation did not complete successfully."
         exit 1
