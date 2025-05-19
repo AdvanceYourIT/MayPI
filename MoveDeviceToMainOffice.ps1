@@ -9,9 +9,9 @@
     and moves the device from the home location to the target location.
 
 .EXAMPLE
-    Run in NinjaOne as an automation script with parameters:
-    - HomeLocation: "*test*"
-    - TargetLocation: "*main*"
+    Run in NinjaOne as an automation script with Script Variables:
+    - HomeLocationPattern: "*test*"
+    - TargetLocationPattern: "*main*"
     Ensure NinjaOneAPIClientID and NinjaOneAPISecret are set in Global Custom Fields.
 
 .INSTANCES
@@ -21,31 +21,29 @@
     "ca.ninjarmm.com",
     "oc.ninjarmm.com"
 
-.PARAMETER HomeLocation
-    The pattern to match the home location (e.g., "*test*"). Defaults to "*onboarding*".
-
-.PARAMETER TargetLocation
-    The pattern to match the target location (e.g., "*main*"). Defaults to "*main*office*".
-
 .NOTES
     Author: Robert van Oorschot - Advance Your IT
-    Date: 2025-05-17
-    Version: 1.9.2
+    Date: 2025-05-19
+    Version: 1.9.4
     Custom Fields Required: NinjaOneAPIClientID, NinjaOneAPISecret
+    Script Variables (Optional): HomeLocationPattern, TargetLocationPattern
     Note: NinjaOneAPISecret must be less than 200 characters.
 #>
-
-param (
-    [Parameter(Mandatory=$false)]
-    [string]$HomeLocation = "*onboarding*",
-
-    [Parameter(Mandatory=$false)]
-    [string]$TargetLocation = "*main*office*"
-)
 
 # Hardcode instance URL
 $Instance = "eu.ninjarmm.com"
 $InstanceUrl = "https://$Instance"
+
+# Fetch Script Variables for HomeLocation and TargetLocation with fallback to default values
+$HomeLocation = Ninja-Property-Get $env:homelocation
+if (-not $HomeLocation) {
+    $HomeLocation = "*onboarding*"  # Default value if Script Variable is not set
+}
+
+$TargetLocation = Ninja-Property-Get $env:targetlocation
+if (-not $TargetLocation) {
+    $TargetLocation = "*main*office*"  # Default value if Script Variable is not set
+}
 
 # Function to get OAuth access token
 function Get-AccessToken {
