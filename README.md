@@ -71,6 +71,18 @@ param (
 )
 ```
 
+Remember to add the proper script variables in the script in NinjaOne:
+
+HomeLocation and TargetLocation
+
+![afbeelding](https://github.com/user-attachments/assets/54cec868-962a-430d-9dfb-db286e31fe7a)
+
+![afbeelding](https://github.com/user-attachments/assets/1c8eee2f-d5bf-40e6-b277-0b62df8e85d4)
+
+![afbeelding](https://github.com/user-attachments/assets/7b13a170-b91a-4884-afa8-2ff144163ced)
+
+
+
 ✔ Securely authenticates using global fields  
 ✔ Automatically checks device location and organization  
 ✔ Only moves device if current and target location differ  
