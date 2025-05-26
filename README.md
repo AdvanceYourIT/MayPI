@@ -1,99 +1,55 @@
-# 🏢 NinjaOne Device Location Automator
+# 🖥️ NinjaOne Device Location Automator
 
-PowerShell script for automating the relocation of devices in NinjaOne from an onboarding location to a main office using the public API.
+_A regular topic in `#api` – so this one had to be tackled!_
 
----
+## 🚀 What the project does
+This PowerShell script automates the relocation of devices in NinjaOne. It checks whether a device is located in a specified onboarding location and whether the custom field `OnboardingDone` is set to `true`. If both conditions are satisfied, the device is moved to a specified target location within the same organization.
 
-## 🔧 What the project does
+## 🧠 The problem it solves
+IT teams often onboard devices to a temporary location such as `"Onboarding"`, but forget to update the location after setup is complete. This leads to:
 
-The `MoveDeviceToMainOffice.ps1` script is a PowerShell automation for NinjaOne that moves devices from a home location (e.g., an onboarding site) to a target location (e.g., a main office) within the same organization. It authenticates with the NinjaOne API using client credentials stored in Custom Fields, identifies the current device, retrieves the organization’s locations, and updates the device's location. 
+- ❌ Incorrect policy assignment
+- 📉 Inaccurate reporting
+- 🗂️ Cluttered inventory
 
-The script uses environment variables (`$env:homelocation` and `$env:targetlocation`) to dynamically set location patterns, with fallback defaults (`*onboarding*` and `*main*office*`), making it flexible and easy to configure within NinjaOne.
-
----
-
-## ❗ The problem it solves
-
-In NinjaOne, devices are often placed in a temporary onboarding location during setup, requiring manual relocation to their final destination (e.g., "Main Office"). This manual process is time-consuming and error-prone, especially for organizations managing large numbers of devices.
-
-The script automates this relocation, eliminating manual effort, reducing errors, and ensuring consistency. By leveraging environment variables, it allows IT teams to customize location patterns dynamically without altering the script, enhancing adaptability for different organizational setups.
-
-![Screenshot](https://github.com/user-attachments/assets/6e0f5bc2-378c-4552-b847-8ceab8a49264)
-
----
+By automating the move process, this script ensures device location data remains accurate and clean — saving time and reducing errors.
 
 ## 👥 Who it helps
-
-This project benefits IT administrators and system engineers managing device onboarding in NinjaOne, particularly within IT operations teams at small to medium-sized businesses or managed service providers (MSPs). 
-
-It streamlines device management workflows, allowing these teams to focus on higher-priority tasks instead of repetitive manual processes.
-
----
+- 👨‍💻 **IT Administrators**: Eliminates manual post-onboarding tasks
+- 🛠️ **MSPs**: Maintains accurate inventories across multiple clients
+- 🤖 **Automation teams**: Seamlessly integrates with NinjaOne automation flows
 
 ## 🔑 Key API endpoints used
+| Endpoint | Purpose |
+|----------|---------|
+| `POST /ws/oauth/token` | Authenticate using client credentials from custom fields |
+| `GET /api/v2/devices?expand=location,organization` | Retrieve all devices with location and org details |
+| `GET /api/v2/device/{deviceId}/custom-fields` | Read the `OnboardingDone` field |
+| `GET /api/v2/organization/{orgId}/locations` | Get available locations for a given org |
+| `PATCH /api/v2/device/{deviceId}` | Move the device to a new location |
 
-The script interacts with the NinjaOne API (version 2) to perform its operations. The key endpoints used are:
+## ⚙️ Script Variables
+Create the following **Script Variables** in NinjaOne (type: `String/Text`):
 
-- `POST /ws/oauth/token`: Authenticates and obtains an OAuth access token using client credentials.
-- `GET /api/v2/devices`: Retrieves a list of devices to identify the current device, supporting pagination with query parameters `pageSize` and `after`.
-- `GET /api/v2/organization/{organizationId}/locations`: Fetches all locations for a given organization to find the home and target locations.
-- `PATCH /api/v2/device/{deviceId}`: Updates the device’s location by setting a new `locationId` in the request body.
+- `homelocation` – default: `"Onboarding"`
+- `targetlocation` – default: `"Main Office"`
 
----
+These are injected at runtime via `$env:homelocation` and `$env:targetlocation` and can be set per policy or left at default.
 
-## 🔐 Secure Custom Field Handling
+## 🛡️ Custom Fields
+This script uses secure authentication and custom fields based on the [Getting Started guide by Luke Whitelock](https://docs.mspp.io/ninjaone/getting-started):
 
-This script uses NinjaOne's Secure Global Custom Fields:
-- `NinjaOneAPIClientID` — normal string field
-- `NinjaOneAPISecret` — stored as a Secure Field
+- 🔐 `NinjaOneAPIClientID`
+- 🔐 `NinjaOneAPISecret`
+- ✅ `OnboardingDone` (checkbox)
 
-Safe handling is implemented:
+> To set `OnboardingDone` to true from another automation:
 ```powershell
-if ($clientSecretSecure -is [System.Security.SecureString]) {
-    $Ptr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($clientSecretSecure)
-    $clientSecret = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($Ptr)
-    [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($Ptr)
-}
+Ninja-Property-Set onboardingdone 1
 ```
 
-> 🔄 Note: As of recent updates, Secure Custom Fields in NinjaOne support up to 65,535 characters, removing the previous 200-character limitation.
+## 🧪 Example usage
+This script is intended for use in a NinjaOne **automation policy**. Devices in the `"Onboarding"` location with `OnboardingDone = true` will be automatically moved to `"Main Office"` within the same organization.
 
----
-
-## ▶️ Usage
-
-This script is intended to be executed inside a NinjaOne Automation Policy.
-
-```powershell
-param (
-    [string]$OnboardingLocationPattern = $env:homelocation  # e.g., "*staging*"
-    [string]$TargetLocationPattern = $env:targetlocation    # e.g., "*main*office*"
-)
-```
-
-Remember to add the proper script variables in the script in NinjaOne:
-
-HomeLocation and TargetLocation
-
-![afbeelding](https://github.com/user-attachments/assets/54cec868-962a-430d-9dfb-db286e31fe7a)
-
-![afbeelding](https://github.com/user-attachments/assets/1c8eee2f-d5bf-40e6-b277-0b62df8e85d4)
-
-![afbeelding](https://github.com/user-attachments/assets/7b13a170-b91a-4884-afa8-2ff144163ced)
-
-
-
-✔ Securely authenticates using global fields  
-✔ Automatically checks device location and organization  
-✔ Only moves device if current and target location differ  
-✔ Supports dynamic environment variable-based configuration  
-
----
-
-## 👨‍💻 Author
-
-Robert van Oorschot  
-Advance Your IT 
-🇳🇱 NinjaOne Automation Enthousiast
-
----
+## 🌐 GitHub Repository
+📦 [AdvanceYourIT/MayPI](https://github.com/AdvanceYourIT/MayPI)
