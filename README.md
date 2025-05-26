@@ -51,5 +51,5 @@ Ninja-Property-Set onboardingdone 1
 ## 🧪 Example usage
 This script is intended for use in a NinjaOne **automation policy**. Devices in the `"Onboarding"` location with `OnboardingDone = true` will be automatically moved to `"Main Office"` within the same organization.
 
-## 🌐 GitHub Repository
-📦 [AdvanceYourIT/MayPI](https://github.com/AdvanceYourIT/MayPI)
+📝 Author: Robert van Oorschot – Advance Your IT
+📅 Date: 2025-05-26
