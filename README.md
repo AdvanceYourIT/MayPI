@@ -53,4 +53,4 @@ This script is intended for use in a NinjaOne **automation policy**. Devices in 
 
 📝 Author: Robert van Oorschot – Advance Your IT
 📅 Date: 2025-05-26
-🏷️ Version: 2.0.0 – Simplified version without logging or error handling
+🏷️ Version: 2.0.0
